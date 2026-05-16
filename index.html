@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loot Crate ROI Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+  :root {
+    --bg:        #f0f2f7;
+    --surface:   #ffffff;
+    --surface2:  #f7f8fa;
+    --border:    #e4e6eb;
+    --text:      #111827;
+    --muted:     #6b7280;
+    --accent:    #7c3aed;
+    --accent-lt: #ede9fe;
+    --green:     #16a34a;
+    --green-lt:  #dcfce7;
+    --red:       #dc2626;
+    --red-lt:    #fee2e2;
+    --amber:     #d97706;
+    --amber-lt:  #fef3c7;
+    --radius:    10px;
+    --shadow:    0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.05);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.06);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .site-header {
+    background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 60%, #a855f7 100%);
+    color: #fff;
+    padding: 2.5rem 0 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 16px rgba(109,40,217,.25);
+  }
+  .site-header .inner { max-width: 860px; margin: 0 auto; padding: 0 1.5rem; }
+  .site-header h1 {
+    font-size: 26px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .site-header h1 .ti { font-size: 26px; opacity: .9; }
+  .site-header p { font-size: 14px; opacity: .8; }
+
+  /* ── Page wrapper ── */
+  .page { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+
+  /* ── Section title ── */
+  .section-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    margin-top: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text);
+  }
+  .section-title .ti { color: var(--accent); font-size: 16px; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+    transition: box-shadow .15s;
+  }
+  .card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.1), 0 8px 20px rgba(0,0,0,.07); }
+
+  /* ── Crate header ── */
+  .crate-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .crate-icon {
+    width: 34px; height: 34px;
+    background: var(--accent-lt);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent);
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .crate-name-input {
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    flex: 1;
+    outline: none;
+    min-width: 0;
+  }
+  .crate-name-input::placeholder { color: var(--muted); }
+
+  /* ── Meta row ── */
+  .meta-row { display: flex; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; align-items: flex-end; }
+  .meta-field { display: flex; flex-direction: column; gap: 5px; }
+  .meta-field label { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .meta-field input { width: 150px; }
+
+  .ev-chip {
+    margin-left: auto;
+    background: var(--accent-lt);
+    border-radius: 8px;
+    padding: 8px 14px;
+    text-align: right;
+  }
+  .ev-chip .ev-label { font-size: 11px; font-weight: 500; color: var(--accent); text-transform: uppercase; letter-spacing: .05em; }
+  .ev-chip .ev-val { font-size: 20px; font-weight: 600; color: var(--accent); }
+  .ev-chip .ev-sub { font-size: 11px; color: var(--accent); opacity: .7; }
+
+  /* ── Form inputs ── */
+  input[type=text], input[type=number] {
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--surface2);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input[type=text]:focus, input[type=number]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124,58,237,.12);
+    background: var(--surface);
+  }
+
+  /* ── Table ── */
+  .items-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; }
+  .items-table thead { background: var(--surface2); }
+  .items-table th {
+    text-align: left;
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .items-table th:first-child { border-radius: 6px 0 0 0; }
+  .items-table th:last-child  { border-radius: 0 6px 0 0; }
+  .items-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .items-table tbody tr:last-child td { border-bottom: none; }
+  .items-table tbody tr:hover td { background: #faf9ff; }
+  .items-table td input[type=text] { background: transparent; border-color: transparent; padding: 4px 6px; }
+  .items-table td input[type=text]:hover { border-color: var(--border); background: var(--surface); }
+  .items-table td input[type=text]:focus { background: var(--surface); border-color: var(--accent); }
+  .items-table td input[type=number] { width: 80px; padding: 4px 8px; }
+  .ev-contrib { color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+
+  /* ── Buttons ── */
+  .del-btn {
+    background: none; border: none;
+    color: var(--muted);
+    cursor: pointer; padding: 4px 8px; font-size: 15px; line-height: 1; border-radius: 5px;
+    transition: color .15s, background .15s;
+  }
+  .del-btn:hover { color: var(--red); background: var(--red-lt); }
+
+  .del-crate-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 5px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 500;
+    color: var(--muted);
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .del-crate-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-lt); }
+
+  .add-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: none;
+    border: 1px dashed var(--border);
+    border-radius: 7px;
+    padding: 7px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    color: var(--muted);
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-lt); }
+
+  .add-crate-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 600;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(124,58,237,.3);
+    transition: background .15s, box-shadow .15s, transform .1s;
+  }
+  .add-crate-btn:hover { background: #6d28d9; box-shadow: 0 4px 14px rgba(124,58,237,.4); transform: translateY(-1px); }
+  .add-crate-btn:active { transform: translateY(0); }
+
+  /* ── Warnings ── */
+  .warning {
+    font-size: 12px; color: var(--amber);
+    background: var(--amber-lt);
+    border-radius: 6px; padding: 6px 10px; margin-top: 8px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .error {
+    font-size: 12px; color: var(--red);
+    background: var(--red-lt);
+    border-radius: 6px; padding: 6px 10px; margin-top: 8px;
+    display: flex; align-items: center; gap: 5px;
+  }
+
+  /* ── Divider ── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+  /* ── Results grid ── */
+  .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 1rem; }
+
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem;
+    position: relative;
+    box-shadow: var(--shadow-sm);
+  }
+  .metric-label { font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+  .metric-value { font-size: 26px; font-weight: 700; }
+  .metric-sub { font-size: 12px; color: var(--muted); margin-top: 5px; font-variant-numeric: tabular-nums; }
+
+  .rank-badge {
+    position: absolute; top: 10px; right: 10px;
+    font-size: 11px; font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 20px;
+  }
+  .rank-1 { background: var(--green-lt); color: #15803d; }
+  .rank-2 { background: #dbeafe; color: #1d4ed8; }
+  .rank-3 { background: var(--amber-lt); color: #b45309; }
+
+  /* ── ROI bars ── */
+  .roi-bar-wrap { margin-top: 1.25rem; }
+  .roi-bar-label { display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; margin-bottom: 5px; }
+  .roi-bar-track {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    height: 28px;
+    overflow: hidden;
+  }
+  .roi-bar-fill {
+    height: 100%; border-radius: 7px;
+    transition: width .45s cubic-bezier(.4,0,.2,1);
+    display: flex; align-items: center;
+    padding-left: 10px;
+    font-size: 12px; font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--muted);
+    font-size: 14px;
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+  }
+  .empty-state .ti { font-size: 32px; display: block; margin-bottom: 8px; opacity: .4; }
+
+  /* ── Footer note ── */
+  .note {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  /* ── Conversion bar ── */
+  .conversion-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: var(--radius);
+    padding: 12px 18px;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .conversion-bar .cb-label {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13px; font-weight: 600; color: #92400e;
+    white-space: nowrap;
+  }
+  .conversion-bar .cb-label .ti { color: #f59e0b; font-size: 16px; }
+  .conversion-bar .cb-unit { font-size: 13px; color: #92400e; white-space: nowrap; }
+  .conversion-bar input[type=number] {
+    width: 110px;
+    border-color: #fcd34d;
+    background: #fff;
+  }
+  .conversion-bar input[type=number]:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,.15); }
+  .cb-preview {
+    margin-left: auto;
+    font-size: 12px; font-weight: 500; color: #92400e;
+    background: #fef3c7; border-radius: 6px;
+    padding: 4px 10px; white-space: nowrap;
+  }
+  .cost-gbp {
+    font-size: 12px; font-weight: 500;
+    color: #92400e;
+    background: #fef3c7;
+    border-radius: 5px;
+    padding: 2px 7px;
+    white-space: nowrap;
+  }
+
+  /* ── Input prefix ── */
+  .input-pfx { display: inline-flex; align-items: center; gap: 3px; }
+  .input-pfx .pfx { font-size: 12px; font-weight: 600; color: var(--muted); user-select: none; }
+  .input-pfx .pfx.coin { color: #f59e0b; font-size: 15px; }
+
+  /* ── Header actions ── */
+  .header-row { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .header-actions { display: flex; align-items: center; gap: 8px; padding-top: 4px; }
+  .hdr-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.3);
+    border-radius: 8px;
+    padding: 7px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    color: #fff;
+    transition: background .15s, border-color .15s;
+  }
+  .hdr-btn:hover { background: rgba(255,255,255,.25); border-color: rgba(255,255,255,.5); }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: #111827;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    box-shadow: 0 4px 20px rgba(0,0,0,.25);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .2s, transform .2s;
+    z-index: 1000;
+    pointer-events: none;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.is-error { background: var(--red); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <div class="header-row">
+      <div>
+        <h1><i class="ti ti-package"></i> Loot Crate ROI Tracker</h1>
+        <p>Add crates, enter each item's drop chance and value, then compare expected returns.</p>
+      </div>
+      <div class="header-actions">
+        <button class="hdr-btn" onclick="exportData()"><i class="ti ti-download"></i> Export</button>
+        <button class="hdr-btn" onclick="document.getElementById('import-file').click()"><i class="ti ti-upload"></i> Import</button>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+      </div>
+    </div>
+  </div>
+</header>
+
+<div id="toast" class="toast"></div>
+
+<div class="page">
+  <div class="conversion-bar">
+    <span class="cb-label"><i class="ti ti-coin"></i> Coin conversion rate</span>
+    <div class="input-pfx"><span class="pfx">£</span><input type="number" id="conversion-rate" min="0" step="0.001" placeholder="0.00" oninput="setConversionRate(this.value)"></div>
+    <span class="cb-unit">per coin</span>
+    <span class="cb-preview" id="cb-preview" style="display:none"></span>
+  </div>
+
+  <div id="crates-container"></div>
+
+  <button class="add-crate-btn" onclick="addCrate()">
+    <i class="ti ti-plus"></i> Add crate
+  </button>
+
+  <hr class="divider">
+
+  <div class="section-title"><i class="ti ti-chart-bar"></i> Return on investment comparison</div>
+  <div id="results-container">
+    <div class="empty-state"><i class="ti ti-inbox"></i>Add at least one crate with items to see results.</div>
+  </div>
+</div>
+
+<script>
+let data = {crates:[], conversionRate:0};
+
+function load(){
+  try{const s=localStorage.getItem('loot_crate_data');if(s)data=JSON.parse(s);}catch(e){}
+  if(!data.crates||data.crates.length===0){
+    data={...data,crates:[{id:uid(),name:'Crate A',cost:100,items:[{id:uid(),name:'Common item',chance:60,value:50},{id:uid(),name:'Rare item',chance:30,value:150},{id:uid(),name:'Legendary',chance:10,value:500}]}]};
+  }
+  if(!data.conversionRate) data.conversionRate=0;
+  const rateInput=document.getElementById('conversion-rate');
+  if(rateInput&&data.conversionRate>0) rateInput.value=data.conversionRate;
+}
+
+function save(){
+  try{localStorage.setItem('loot_crate_data',JSON.stringify(data));}catch(e){}
+}
+
+function uid(){return Math.random().toString(36).slice(2,9)}
+
+function addCrate(){
+  data.crates.push({id:uid(),name:'New crate',cost:100,items:[]});
+  save();render();
+}
+
+function deleteCrate(cid){
+  data.crates=data.crates.filter(c=>c.id!==cid);
+  save();render();
+}
+
+function addItem(cid){
+  const c=data.crates.find(c=>c.id===cid);
+  if(c)c.items.push({id:uid(),name:'New item',chance:10,value:100});
+  save();render();
+}
+
+function deleteItem(cid,iid){
+  const c=data.crates.find(c=>c.id===cid);
+  if(c)c.items=c.items.filter(i=>i.id!==iid);
+  save();render();
+}
+
+function setConversionRate(val){
+  data.conversionRate=parseFloat(val)||0;
+  save();
+  updateAllCostDisplays();
+}
+
+function updateCostDisplay(cid){
+  const c=data.crates.find(c=>c.id===cid);
+  if(!c)return;
+  const el=document.getElementById(`cost-gbp-${cid}`);
+  if(!el)return;
+  const rate=data.conversionRate||0;
+  el.textContent=rate>0?`= £${(c.cost*rate).toFixed(2)}`:'';
+  el.style.display=rate>0?'':'none';
+}
+
+function updateAllCostDisplays(){
+  const preview=document.getElementById('cb-preview');
+  const rate=data.conversionRate||0;
+  if(preview){
+    if(rate>0){preview.textContent=`100 pts = £${(100*rate).toFixed(2)}`;preview.style.display='';}
+    else preview.style.display='none';
+  }
+  data.crates.forEach(c=>updateCostDisplay(c.id));
+}
+
+function updateCrate(cid,field,val){
+  const c=data.crates.find(c=>c.id===cid);
+  if(!c)return;
+  c[field]=field==='cost'?parseFloat(val)||0:val;
+  save();renderResults();
+  if(field==='cost') updateCostDisplay(cid);
+}
+
+function updateItem(cid,iid,field,val){
+  const c=data.crates.find(c=>c.id===cid);
+  if(!c)return;
+  const it=c.items.find(i=>i.id===iid);
+  if(!it)return;
+  it[field]=(field==='name')?val:(parseFloat(val)||0);
+  save();renderResults();updateWarning(cid);
+}
+
+function updateWarning(cid){
+  const c=data.crates.find(c=>c.id===cid);
+  if(!c)return;
+  const slot=document.querySelector(`[data-cid="${cid}"] .warn-slot`);
+  if(!slot)return;
+  const{totalChance}=calcEV(c);
+  slot.innerHTML=totalChance>100
+    ?`<div class="error"><i class="ti ti-alert-triangle"></i> Chances sum to ${totalChance.toFixed(1)}% (exceeds 100%)</div>`
+    :totalChance<100
+      ?`<div class="warning"><i class="ti ti-info-circle"></i> Chances sum to ${totalChance.toFixed(1)}% — remaining ${(100-totalChance).toFixed(1)}% yields nothing</div>`
+      :'';
+}
+
+function calcEV(crate){
+  if(!crate.items.length)return{ev:0,totalChance:0};
+  const totalChance=crate.items.reduce((a,i)=>a+i.chance,0);
+  const ev=crate.items.reduce((a,i)=>a+(i.chance/100)*i.value,0);
+  return{ev,totalChance};
+}
+
+function renderCrates(){
+  const el=document.getElementById('crates-container');
+  el.innerHTML=data.crates.map(c=>{
+    const {ev,totalChance}=calcEV(c);
+    const warn=totalChance>100
+      ?`<div class="error"><i class="ti ti-alert-triangle"></i> Chances sum to ${totalChance.toFixed(1)}% (exceeds 100%)</div>`
+      :totalChance<100
+        ?`<div class="warning"><i class="ti ti-info-circle"></i> Chances sum to ${totalChance.toFixed(1)}% — remaining ${(100-totalChance).toFixed(1)}% yields nothing</div>`
+        :'';
+
+    const rows=c.items.map(it=>`
+      <tr>
+        <td><input type="text" value="${esc(it.name)}" oninput="updateItem('${c.id}','${it.id}','name',this.value)"></td>
+        <td><input type="number" min="0" max="100" step="0.01" value="${it.chance}" oninput="updateItem('${c.id}','${it.id}','chance',this.value)"></td>
+        <td><div class="input-pfx"><span class="pfx">£</span><input type="number" min="0" step="0.01" value="${it.value}" oninput="updateItem('${c.id}','${it.id}','value',this.value)"></div></td>
+        <td class="ev-contrib">£${((it.chance/100)*it.value).toFixed(2)}</td>
+        <td><button class="del-crate-btn" onclick="deleteItem('${c.id}','${it.id}')" aria-label="Remove item">Remove</button></td>
+      </tr>`).join('');
+
+    return `<div class="card" data-cid="${c.id}">
+      <div class="crate-header">
+        <div class="crate-icon"><i class="ti ti-package"></i></div>
+        <input class="crate-name-input" value="${esc(c.name)}" oninput="updateCrate('${c.id}','name',this.value)" placeholder="Crate name">
+        <button class="del-crate-btn" onclick="deleteCrate('${c.id}')"><i class="ti ti-trash" style="font-size:13px"></i> Remove</button>
+      </div>
+      <div class="meta-row">
+        <div class="meta-field">
+          <label><i class="ti ti-coin" style="color:#f59e0b"></i> Cost to open (pts)</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="input-pfx"><span class="pfx coin"><i class="ti ti-coin"></i></span><input type="number" min="0" step="1" value="${c.cost}" oninput="updateCrate('${c.id}','cost',this.value)"></div>
+            <span class="cost-gbp" id="cost-gbp-${c.id}"></span>
+          </div>
+        </div>
+        <div class="ev-chip">
+          <div class="ev-label">Expected value (£)</div>
+          <span class="ev-val">£${ev.toFixed(2)}</span>
+          <span class="ev-sub"> / open</span>
+        </div>
+      </div>
+      <div class="warn-slot">${warn}</div>
+      <table class="items-table">
+        <thead><tr>
+          <th>Item name</th>
+          <th>Chance (%)</th>
+          <th>Value (£)</th>
+          <th>EV contrib. (£)</th>
+          <th></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div style="margin-top:12px">
+        <button class="add-btn" onclick="addItem('${c.id}')"><i class="ti ti-plus"></i> Add item</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderResults(){
+  const el=document.getElementById('results-container');
+  const valid=data.crates.filter(c=>c.items.length>0&&c.cost>0);
+  if(!valid.length){
+    el.innerHTML='<div class="empty-state"><i class="ti ti-chart-bar"></i>Add at least one crate with items and a non-zero cost to see results.</div>';
+    return;
+  }
+
+  const results=valid.map(c=>{
+    const{ev,totalChance}=calcEV(c);
+    const roi=(ev-c.cost)/c.cost*100;
+    return{c,ev,roi,totalChance};
+  }).sort((a,b)=>b.roi-a.roi);
+
+  const maxROI=Math.max(...results.map(r=>Math.abs(r.roi)),1);
+
+  const cards=results.map((r,i)=>{
+    const rankBadge=i===0?`<span class="rank-badge rank-1"><i class="ti ti-trophy" style="font-size:10px"></i> Best</span>`
+      :i===1?`<span class="rank-badge rank-2">2nd</span>`
+      :i===2?`<span class="rank-badge rank-3">3rd</span>`:'';
+    const roiColor=r.roi>=0?'#16a34a':'#dc2626';
+    return `<div class="metric-card">
+      ${rankBadge}
+      <div class="metric-label">${esc(r.c.name)}</div>
+      <div class="metric-value" style="color:${roiColor}">${r.roi>=0?'+':''}${r.roi.toFixed(1)}%</div>
+      <div class="metric-sub">EV: £${r.ev.toFixed(2)} &nbsp;·&nbsp; <i class="ti ti-coin" style="color:#f59e0b;font-size:11px"></i> ${r.c.cost} pts</div>
+    </div>`;
+  }).join('');
+
+  const bars=results.map((r)=>{
+    const pct=Math.min(Math.abs(r.roi)/maxROI*100,100);
+    const fillColor=r.roi>=0?'#16a34a':'#dc2626';
+    const fillBg=r.roi>=0?'#dcfce7':'#fee2e2';
+    return `<div class="roi-bar-wrap">
+      <div class="roi-bar-label">
+        <span>${esc(r.c.name)}</span>
+        <span style="color:${fillColor}">${r.roi>=0?'+':''}${r.roi.toFixed(2)}% ROI</span>
+      </div>
+      <div class="roi-bar-track">
+        <div class="roi-bar-fill" style="width:${pct.toFixed(1)}%;background:${fillBg};color:${fillColor}">
+          £${r.ev.toFixed(2)} vs ${r.c.cost} pts
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML=`<div class="results-grid">${cards}</div><div style="margin-top:1rem">${bars}</div>
+  <p class="note"><i class="ti ti-info-circle"></i> ROI = (expected value − cost) ÷ cost × 100. A positive ROI means the crate is worth opening on average.</p>`;
+}
+
+function render(){renderCrates();renderResults();updateAllCostDisplays();}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function showToast(msg, isError=false){
+  const t=document.getElementById('toast');
+  t.innerHTML=`<i class="ti ${isError?'ti-alert-circle':'ti-circle-check'}"></i>${msg}`;
+  t.className='toast'+(isError?' is-error':'')+' show';
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>t.className='toast'+(isError?' is-error':''),2800);
+}
+
+function exportData(){
+  const json=JSON.stringify(data,null,2);
+  const a=Object.assign(document.createElement('a'),{
+    href:URL.createObjectURL(new Blob([json],{type:'application/json'})),
+    download:'loot-crates.json'
+  });
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast(`Exported ${data.crates.length} crate(s)`);
+}
+
+function importData(e){
+  const file=e.target.files[0];
+  e.target.value='';
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const imported=JSON.parse(ev.target.result);
+      if(!imported.crates||!Array.isArray(imported.crates))throw new Error();
+      const newCrates=imported.crates.map(c=>({
+        ...c, id:uid(),
+        items:(c.items||[]).map(it=>({...it,id:uid()}))
+      }));
+      if(data.crates.length>0){
+        const replace=confirm(`Import ${newCrates.length} crate(s)?\n\nOK → replace your ${data.crates.length} existing crate(s)\nCancel → add alongside existing crates`);
+        data.crates=replace?newCrates:[...data.crates,...newCrates];
+      } else {
+        data.crates=newCrates;
+      }
+      save();render();
+      showToast(`Imported ${newCrates.length} crate(s)`);
+    }catch{
+      showToast('Could not read file — make sure it\'s a valid export',true);
+    }
+  };
+  reader.readAsText(file);
+}
+
+load();render();
+</script>
+</body>
+</html>
