@@ -86,15 +86,33 @@
   }
   .card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.1), 0 8px 20px rgba(0,0,0,.07); }
 
+  /* ── Collapse ── */
+  .collapse-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); padding: 4px 5px; border-radius: 6px;
+    display: flex; align-items: center; flex-shrink: 0;
+    transition: color .15s, background .15s;
+  }
+  .collapse-btn:hover { color: var(--text); background: var(--surface2); }
+  .collapse-btn .ti { font-size: 16px; }
+  .collapsed-preview {
+    display: flex; gap: 20px; flex-wrap: wrap;
+    padding-top: 10px;
+  }
+  .cp-stat { display: flex; flex-direction: column; gap: 3px; }
+  .cp-label { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .cp-val { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+
   /* ── Crate header ── */
   .crate-header {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 14px;
+    margin-bottom: 0;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--border);
   }
+  .crate-header.is-expanded { margin-bottom: 14px; }
   .crate-icon {
     width: 34px; height: 34px;
     background: var(--accent-lt);
@@ -441,6 +459,12 @@
 
 <script>
 let data = {crates:[], conversionRate:0};
+const collapsed = new Set();
+
+function toggleCollapse(cid){
+  collapsed.has(cid)?collapsed.delete(cid):collapsed.add(cid);
+  renderCrates();updateAllCostDisplays();
+}
 
 function load(){
   try{const s=localStorage.getItem('loot_crate_data');if(s)data=JSON.parse(s);}catch(e){}
@@ -545,8 +569,13 @@ function calcEV(crate){
 
 function renderCrates(){
   const el=document.getElementById('crates-container');
+  const rate=data.conversionRate||0;
   el.innerHTML=data.crates.map(c=>{
     const {ev,totalChance}=calcEV(c);
+    const isCollapsed=collapsed.has(c.id);
+    const costGbp=rate>0?c.cost*rate:null;
+    const roi=c.cost>0?((ev-(costGbp??c.cost))/(costGbp??c.cost)*100):null;
+
     const warn=totalChance>100
       ?`<div class="error"><i class="ti ti-alert-triangle"></i> Chances sum to ${totalChance.toFixed(1)}% (exceeds 100%)</div>`
       :totalChance<100
@@ -562,13 +591,14 @@ function renderCrates(){
         <td><button class="del-crate-btn" onclick="deleteItem('${c.id}','${it.id}')" aria-label="Remove item">Remove</button></td>
       </tr>`).join('');
 
-    return `<div class="card" data-cid="${c.id}">
-      <div class="crate-header">
-        <div class="crate-icon"><i class="ti ti-package"></i></div>
-        <input class="crate-name-input" value="${esc(c.name)}" oninput="updateCrate('${c.id}','name',this.value)" placeholder="Crate name">
-        <button class="del-crate-btn" onclick="deleteCrate('${c.id}')"><i class="ti ti-trash" style="font-size:13px"></i> Remove</button>
-      </div>
-      <div class="meta-row">
+    const preview=`<div class="collapsed-preview">
+      <div class="cp-stat"><span class="cp-label">Items</span><span class="cp-val">${c.items.length}</span></div>
+      <div class="cp-stat"><span class="cp-label">Cost</span><span class="cp-val"><i class="ti ti-coin" style="color:#f59e0b;font-size:13px"></i> ${c.cost} pts${costGbp!=null?` <span style="font-weight:400;color:var(--muted);font-size:12px">= £${costGbp.toFixed(2)}</span>`:''}</span></div>
+      <div class="cp-stat"><span class="cp-label">Exp. Value</span><span class="cp-val">£${ev.toFixed(2)}</span></div>
+      ${roi!=null?`<div class="cp-stat"><span class="cp-label">ROI</span><span class="cp-val" style="color:${roi>=0?'#16a34a':'#dc2626'}">${roi>=0?'+':''}${roi.toFixed(1)}%</span></div>`:''}
+    </div>`;
+
+    const body=`<div class="meta-row">
         <div class="meta-field">
           <label><i class="ti ti-coin" style="color:#f59e0b"></i> Cost to open (pts)</label>
           <div style="display:flex;align-items:center;gap:8px">
@@ -595,7 +625,18 @@ function renderCrates(){
       </table>
       <div style="margin-top:12px">
         <button class="add-btn" onclick="addItem('${c.id}')"><i class="ti ti-plus"></i> Add item</button>
+      </div>`;
+
+    return `<div class="card" data-cid="${c.id}">
+      <div class="crate-header${isCollapsed?'':' is-expanded'}">
+        <button class="collapse-btn" onclick="toggleCollapse('${c.id}')" aria-label="${isCollapsed?'Expand':'Collapse'} crate">
+          <i class="ti ti-chevron-${isCollapsed?'right':'down'}"></i>
+        </button>
+        <div class="crate-icon"><i class="ti ti-package"></i></div>
+        <input class="crate-name-input" value="${esc(c.name)}" oninput="updateCrate('${c.id}','name',this.value)" placeholder="Crate name">
+        <button class="del-crate-btn" onclick="deleteCrate('${c.id}')"><i class="ti ti-trash" style="font-size:13px"></i> Remove</button>
       </div>
+      ${isCollapsed?preview:body}
     </div>`;
   }).join('');
 }
