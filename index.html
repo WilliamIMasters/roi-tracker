@@ -403,7 +403,7 @@
   <div class="inner">
     <div class="header-row">
       <div>
-        <h1><i class="ti ti-package"></i> Loot Crate ROI Tracker</h1>
+        <h1><i class="ti ti-package"></i> Loot Crate ROI Tracker <span style="font-size:12px;font-weight:400;opacity:.6;letter-spacing:.02em">v0.1.0</span></h1>
         <p>Add crates, enter each item's drop chance and value, then compare expected returns.</p>
       </div>
       <div class="header-actions">
@@ -608,10 +608,12 @@ function renderResults(){
     return;
   }
 
+  const rate=data.conversionRate||0;
   const results=valid.map(c=>{
     const{ev,totalChance}=calcEV(c);
-    const roi=(ev-c.cost)/c.cost*100;
-    return{c,ev,roi,totalChance};
+    const costGbp=rate>0?c.cost*rate:c.cost;
+    const roi=(ev-costGbp)/costGbp*100;
+    return{c,ev,roi,totalChance,costGbp};
   }).sort((a,b)=>b.roi-a.roi);
 
   const maxROI=Math.max(...results.map(r=>Math.abs(r.roi)),1);
@@ -625,7 +627,7 @@ function renderResults(){
       ${rankBadge}
       <div class="metric-label">${esc(r.c.name)}</div>
       <div class="metric-value" style="color:${roiColor}">${r.roi>=0?'+':''}${r.roi.toFixed(1)}%</div>
-      <div class="metric-sub">EV: £${r.ev.toFixed(2)} &nbsp;·&nbsp; <i class="ti ti-coin" style="color:#f59e0b;font-size:11px"></i> ${r.c.cost} pts</div>
+      <div class="metric-sub">EV: £${r.ev.toFixed(2)} &nbsp;·&nbsp; Cost: ${rate>0?`£${r.costGbp.toFixed(2)}`:`<i class="ti ti-coin" style="color:#f59e0b;font-size:11px"></i> ${r.c.cost} pts`}</div>
     </div>`;
   }).join('');
 
@@ -640,14 +642,14 @@ function renderResults(){
       </div>
       <div class="roi-bar-track">
         <div class="roi-bar-fill" style="width:${pct.toFixed(1)}%;background:${fillBg};color:${fillColor}">
-          £${r.ev.toFixed(2)} vs ${r.c.cost} pts
+          £${r.ev.toFixed(2)} vs ${rate>0?`£${r.costGbp.toFixed(2)}`:`${r.c.cost} pts`}
         </div>
       </div>
     </div>`;
   }).join('');
 
   el.innerHTML=`<div class="results-grid">${cards}</div><div style="margin-top:1rem">${bars}</div>
-  <p class="note"><i class="ti ti-info-circle"></i> ROI = (expected value − cost) ÷ cost × 100. A positive ROI means the crate is worth opening on average.</p>`;
+  <p class="note"><i class="ti ti-info-circle"></i> ROI = (expected value − cost) ÷ cost × 100. ${rate>0?'Cost is converted to £ using your coin rate.':'Set a coin conversion rate above to compare in £.'} A positive ROI means the crate is worth opening on average.</p>`;
 }
 
 function render(){renderCrates();renderResults();updateAllCostDisplays();}
