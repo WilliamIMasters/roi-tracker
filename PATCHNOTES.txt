@@ -14,6 +14,35 @@ Bug Fixes
   - Dark mode now correctly darkens the page header gradient
   - Dragging a crate card no longer interferes with selecting text in inputs;
     only the grip handle (⠿) on the left of the header initiates a drag
+
+Improvements
+  - Codebase split from a single index.html into three files: index.html
+    (structure), style.css (all styling), and app.js (all logic); no change
+    to functionality
+
+Code Audit Fixes
+  - Confirm-delete button now correctly turns red (was using CSS variables in
+    inline styles, which browsers do not resolve)
+  - ROI calculation no longer produces Infinity when a crate has zero cost
+  - Break-even chance is now only shown when a coin conversion rate is set,
+    preventing a misleading points-vs-£ unit comparison
+  - Copy-to-clipboard now shows an error toast if the browser denies access
+    instead of silently doing nothing
+  - Deleting a crate now cleans up its sort state so it cannot accumulate
+    indefinitely across many add/delete cycles
+  - Patch notes fetch now times out after 10 seconds, matching JSONBin calls
+  - Toast background, card shadows, conversion bar text, and coin icon colour
+    are all now dark-mode aware; no more hardcoded light-theme hex values
+  - updateCrate and updateItem now validate field names against an allowlist,
+    preventing prototype pollution via crafted input
+  - esc() now returns an empty string for null/undefined instead of the
+    literal text "null" or "undefined"
+  - showToast action button now verifies the handler function exists before
+    rendering it, preventing silent failures
+  - Status refresh interval now skips hidden tabs and is cleaned up on
+    page unload to prevent accumulation across multiple open tabs
+  - Import now validates the shape of every crate and item before accepting
+    the file, preventing silently malformed data from corrupting the app
   - JSONBin requests now time out after 10 seconds instead of hanging
     indefinitely; the header moves to an error state rather than sticking on
     "Saving…"
