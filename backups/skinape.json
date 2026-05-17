@@ -1,0 +1,515 @@
+{
+  "crates": [
+    {
+      "id": "c3zt99b",
+      "name": "Bronze",
+      "cost": 350,
+      "items": [
+        {
+          "id": "8mpxclc",
+          "name": "Mac-10 Button Masher",
+          "chance": 1.5,
+          "value": 0.47
+        },
+        {
+          "id": "qbddqfs",
+          "name": "Nova Wurst Holle",
+          "chance": 1.5,
+          "value": 0.26
+        },
+        {
+          "id": "bbslg63",
+          "name": "Mac-10 Ensnared",
+          "chance": 14,
+          "value": 0.1
+        },
+        {
+          "id": "owajc7i",
+          "name": "Sorry graffiti",
+          "chance": 12,
+          "value": 0.03
+        },
+        {
+          "id": "e6z7pji",
+          "name": "Blinky sticker",
+          "chance": 15,
+          "value": 0.25
+        },
+        {
+          "id": "h83kuz3",
+          "name": "Legacy Copenhagen 2024",
+          "chance": 51,
+          "value": 0.03
+        },
+        {
+          "id": "syay17y",
+          "name": "premium",
+          "chance": 5,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "4qpec5p",
+      "name": "Premium",
+      "cost": 900,
+      "items": [
+        {
+          "id": "v7i5qom",
+          "name": "AK-47 Searing rage",
+          "chance": 1,
+          "value": 4.64
+        },
+        {
+          "id": "vsauz4v",
+          "name": "M4A1-S | Flashback",
+          "chance": 1.5,
+          "value": 3.26
+        },
+        {
+          "id": "sb1z82t",
+          "name": "AK-47 | Breakthrough",
+          "chance": 1.5,
+          "value": 2.35
+        },
+        {
+          "id": "mvrmgwu",
+          "name": "Desert Eagle | Calligraffiti",
+          "chance": 22,
+          "value": 0.21
+        },
+        {
+          "id": "xk4xhyh",
+          "name": "Sticker | Pegasus",
+          "chance": 12,
+          "value": 0.26
+        },
+        {
+          "id": "6y4c85q",
+          "name": "Sticker | Orange Gnar",
+          "chance": 12,
+          "value": 0.29
+        },
+        {
+          "id": "7a8134m",
+          "name": "P2000 | Sure Grip",
+          "chance": 25,
+          "value": 0.1
+        },
+        {
+          "id": "l9xtdf2",
+          "name": "Sticker | Complexity Gaming (Glitter) Paris 2023",
+          "chance": 25,
+          "value": 0.06
+        }
+      ]
+    },
+    {
+      "id": "8qw6jbc",
+      "name": "Silver",
+      "cost": 1000,
+      "items": [
+        {
+          "id": "q5iw7s1",
+          "name": "M4A4 | Turbine",
+          "chance": 1,
+          "value": 1.08
+        },
+        {
+          "id": "uuip03q",
+          "name": "Ak-47 | Safety Net",
+          "chance": 1,
+          "value": 2.96
+        },
+        {
+          "id": "5l5om4k",
+          "name": "Premium",
+          "chance": 5,
+          "value": 0
+        },
+        {
+          "id": "npxuoyq",
+          "name": "Mac-10 | Button Masher",
+          "chance": 10,
+          "value": 0.48
+        },
+        {
+          "id": "i09260y",
+          "name": "Nova | Wurst Holle",
+          "chance": 30,
+          "value": 0.26
+        },
+        {
+          "id": "m098pkl",
+          "name": "P90 | Traction",
+          "chance": 10,
+          "value": 0.36
+        },
+        {
+          "id": "e6dodnt",
+          "name": "Legacy Copenhagen 2024",
+          "chance": 18,
+          "value": 0.03
+        },
+        {
+          "id": "vthutk8",
+          "name": "Mac-10 | Ensnared",
+          "chance": 25,
+          "value": 0.09
+        }
+      ]
+    },
+    {
+      "id": "vu1x7g0",
+      "name": "Beast ",
+      "cost": 5800,
+      "items": [
+        {
+          "id": "t0pk51h",
+          "name": "AWP | Hyper Beast",
+          "chance": 0.5,
+          "value": 34.43
+        },
+        {
+          "id": "u7n40yw",
+          "name": "Mac-10 | Saiba Oni",
+          "chance": 18,
+          "value": 1.33
+        },
+        {
+          "id": "unoe8x1",
+          "name": "XM1014 | Monster Melt",
+          "chance": 6,
+          "value": 2.03
+        },
+        {
+          "id": "emxqilb",
+          "name": "SG-553 | Darkwing",
+          "chance": 37.5,
+          "value": 0.61
+        },
+        {
+          "id": "y8f2y0s",
+          "name": "Stattrack Dual Berettas | Flora Carnivora",
+          "chance": 18.75,
+          "value": 0.61
+        },
+        {
+          "id": "6717cwp",
+          "name": "UMP-45 | Arctic Wolf",
+          "chance": 18.75,
+          "value": 0.49
+        }
+      ]
+    },
+    {
+      "id": "ozexj6l",
+      "name": "1% Knife",
+      "cost": 6000,
+      "items": [
+        {
+          "id": "gvo8gas",
+          "name": "Navaja Knife | Urban masked",
+          "chance": 1,
+          "value": 48.91
+        },
+        {
+          "id": "hkof1q8",
+          "name": "Mac-10 | Button masher",
+          "chance": 11,
+          "value": 0.48
+        },
+        {
+          "id": "ai0zpbq",
+          "name": "Nova | Wurst Holle ",
+          "chance": 33,
+          "value": 0.26
+        },
+        {
+          "id": "g4qcebq",
+          "name": "P90 | Traction",
+          "chance": 11,
+          "value": 0.36
+        },
+        {
+          "id": "ltc8n68",
+          "name": "Glock-18 | Winterized",
+          "chance": 22,
+          "value": 0.11
+        },
+        {
+          "id": "d7saijy",
+          "name": "Glock-18 | Clear Polymer",
+          "chance": 11,
+          "value": 0.25
+        },
+        {
+          "id": "xyayua1",
+          "name": "Mag-7 | Cobalt Core",
+          "chance": 11,
+          "value": 0.31
+        }
+      ]
+    },
+    {
+      "id": "phazdpf",
+      "name": "AWP",
+      "cost": 6600,
+      "items": [
+        {
+          "id": "h84qu7t",
+          "name": "AWP | Phobos",
+          "chance": 4.5,
+          "value": 2.45
+        },
+        {
+          "id": "8dtg2t2",
+          "name": "AWP | PAW",
+          "chance": 2.25,
+          "value": 2.46
+        },
+        {
+          "id": "ahegjvc",
+          "name": "AWP | Worm God",
+          "chance": 2.25,
+          "value": 2.53
+        },
+        {
+          "id": "6bn04b6",
+          "name": "AWP | Arsenic Spill",
+          "chance": 54,
+          "value": 0.46
+        },
+        {
+          "id": "lressx0",
+          "name": "AWP | Acheron",
+          "chance": 36,
+          "value": 0.83
+        }
+      ]
+    },
+    {
+      "id": "ksp114d",
+      "name": "Gold",
+      "cost": 10000,
+      "items": [
+        {
+          "id": "f4iwrpj",
+          "name": "M4A1-S | Stratosphere",
+          "chance": 1,
+          "value": 5.29
+        },
+        {
+          "id": "11uqrpf",
+          "name": "AK-47 | Searing Rage",
+          "chance": 4,
+          "value": 4.05
+        },
+        {
+          "id": "47czjsp",
+          "name": "M4A4 | Turbine",
+          "chance": 6.25,
+          "value": 1.09
+        },
+        {
+          "id": "k014e9h",
+          "name": "AK-47 | Safety Net",
+          "chance": 6.25,
+          "value": 2.81
+        },
+        {
+          "id": "qknoqn4",
+          "name": "P2000 | Royal Baroque",
+          "chance": 12.5,
+          "value": 0.26
+        },
+        {
+          "id": "119wm9k",
+          "name": "CZ75-Auto | Polymer",
+          "chance": 70,
+          "value": 0.55
+        }
+      ]
+    },
+    {
+      "id": "cefg7vw",
+      "name": "Diamond",
+      "cost": 29500,
+      "items": [
+        {
+          "id": "iey0olk",
+          "name": "Navaja Knife | Urban Masked",
+          "chance": 0.5,
+          "value": 48.91
+        },
+        {
+          "id": "r3u0oi2",
+          "name": "Gut Knife | Stained",
+          "chance": 0.5,
+          "value": 67.39
+        },
+        {
+          "id": "tpoayc3",
+          "name": "Hyrda Gloves | Emerald",
+          "chance": 1,
+          "value": 42.91
+        },
+        {
+          "id": "a4tb3jt",
+          "name": "M4A1-S | Stratosphere ",
+          "chance": 1,
+          "value": 5.25
+        },
+        {
+          "id": "7mxb0j2",
+          "name": "AK-47 | Searing Rage",
+          "chance": 48.501,
+          "value": 4.05
+        },
+        {
+          "id": "rr1ga45",
+          "name": "Stattrack Aug | Stymphalian",
+          "chance": 32.334,
+          "value": 3.6
+        },
+        {
+          "id": "0yx0uft",
+          "name": "M4A1-s | Nightmare",
+          "chance": 16.167,
+          "value": 7.72
+        }
+      ]
+    },
+    {
+      "id": "rb94zya",
+      "name": "Ruby",
+      "cost": 49000,
+      "items": [
+        {
+          "id": "lqtjkig",
+          "name": "Specialist Gloves | Buckshot",
+          "chance": 1,
+          "value": 56.64
+        },
+        {
+          "id": "0s5raqx",
+          "name": "Stattrak Kukri Knife | Urban Masked",
+          "chance": 2,
+          "value": 63.2
+        },
+        {
+          "id": "52xva1m",
+          "name": "M4A1-S | Stratosphere",
+          "chance": 40.287,
+          "value": 5.29
+        },
+        {
+          "id": "8rlfzzw",
+          "name": "AK-47 | The Outsiders",
+          "chance": 40.287,
+          "value": 7.05
+        },
+        {
+          "id": "4p0flu7",
+          "name": "M4A1-S | Nightmare",
+          "chance": 13.429,
+          "value": 7.72
+        }
+      ]
+    },
+    {
+      "id": "ovosgvj",
+      "name": "Knife Hunter",
+      "cost": 145000,
+      "items": [
+        {
+          "id": "rxh6llb",
+          "name": "M4A1-S | Stratosphere",
+          "chance": 11.667,
+          "value": 5.29
+        },
+        {
+          "id": "qksq5q1",
+          "name": "AK-47 | The Outsiders",
+          "chance": 23.334,
+          "value": 7.05
+        },
+        {
+          "id": "eyhfu0e",
+          "name": "Navaja Knife | Urban Masked",
+          "chance": 15,
+          "value": 48.91
+        },
+        {
+          "id": "rsdppf5",
+          "name": "Gut Knife | Stained",
+          "chance": 15,
+          "value": 67.39
+        },
+        {
+          "id": "9sx8p4f",
+          "name": "Shadow Daggers | Boreal Forest",
+          "chance": 15,
+          "value": 47
+        }
+      ]
+    },
+    {
+      "id": "ulj7d7d",
+      "name": "Gloves",
+      "cost": 180000,
+      "items": [
+        {
+          "id": "6b593ja",
+          "name": "Specialist Gloves | Buckshot",
+          "chance": 8,
+          "value": 56.64
+        },
+        {
+          "id": "spie7t4",
+          "name": "Hyrda Gloves | Emerald",
+          "chance": 46,
+          "value": 42.91
+        },
+        {
+          "id": "8v3c3o7",
+          "name": "Hydra Gloves | Rattler",
+          "chance": 46,
+          "value": 37.41
+        }
+      ]
+    },
+    {
+      "id": "j50vcyj",
+      "name": "Knives",
+      "cost": 260000,
+      "items": [
+        {
+          "id": "og0s8ol",
+          "name": "Stattrak Kukri Knife | Urban Masked",
+          "chance": 8,
+          "value": 63.2
+        },
+        {
+          "id": "33bjay1",
+          "name": "Navaja Knife | Urban Masked",
+          "chance": 30.667,
+          "value": 48.91
+        },
+        {
+          "id": "7ddvrb6",
+          "name": "Gut Knife | Stained",
+          "chance": 30.667,
+          "value": 67.39
+        },
+        {
+          "id": "lodw0jb",
+          "name": "Shadow Daggers | Boreal Forest",
+          "chance": 30.667,
+          "value": 47
+        }
+      ]
+    }
+  ],
+  "conversionRate": 0.00025
+}

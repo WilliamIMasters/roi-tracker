@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Crate body -->
+  <rect x="4" y="12" width="24" height="17" rx="2.5" fill="#533AB7"/>
+  <!-- Crate lid -->
+  <rect x="2" y="8" width="28" height="6" rx="2" fill="#7F77DD"/>
+  <!-- Crate cross straps horizontal -->
+  <rect x="4" y="19" width="24" height="2.5" fill="#3C3489"/>
+  <!-- Crate cross straps vertical -->
+  <rect x="14.75" y="12" width="2.5" height="17" fill="#3C3489"/>
+  <!-- Lid center band -->
+  <rect x="2" y="10.5" width="28" height="2" fill="#3C3489"/>
+  <!-- Coin/star sparkle top right -->
+  <circle cx="24" cy="7" r="5" fill="#EF9F27"/>
+  <text x="24" y="10.5" text-anchor="middle" font-size="7" font-weight="bold" fill="#412402" font-family="sans-serif">$</text>
+</svg>

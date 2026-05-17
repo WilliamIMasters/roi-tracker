@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Loot Crate ROI Tracker</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -574,7 +575,7 @@
     <div class="header-row">
       <div>
         <div>
-          <h1><i class="ti ti-package"></i> Loot Crate ROI Tracker <span style="font-size:12px;font-weight:400;opacity:.6;letter-spacing:.02em">v0.4</span></h1>
+          <h1><i class="ti ti-package"></i> Loot Crate ROI Tracker <span id="version-header" style="font-size:12px;font-weight:400;opacity:.6;letter-spacing:.02em"></span></h1>
           <p>Add crates, enter each item's drop chance and value, then compare expected returns.</p>
           <div id="bin-status" class="bin-status"><span class="bin-dot"></span><span id="bin-status-text"></span></div>
         </div>
@@ -651,7 +652,7 @@
 
 <footer class="site-footer">
   <div class="inner">
-    <span class="footer-left">Loot Crate ROI Tracker &nbsp;·&nbsp; v0.4</span>
+    <span class="footer-left">Loot Crate ROI Tracker &nbsp;·&nbsp; <span id="version-footer"></span></span>
     <button class="footer-patchnotes-btn" onclick="openPatchNotesModal()">
       <i class="ti ti-news"></i> Patch notes
     </button>
@@ -671,6 +672,10 @@
 </div>
 
 <script>
+const APP_VERSION = 'v0.5';
+document.getElementById('version-header').textContent = APP_VERSION;
+document.getElementById('version-footer').textContent = APP_VERSION;
+
 let data = {crates:[], conversionRate:0};
 const collapsed = new Set();
 
