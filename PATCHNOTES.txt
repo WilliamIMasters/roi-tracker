@@ -1,0 +1,90 @@
+================================================================================
+  LOOT CRATE ROI TRACKER — PATCH NOTES
+================================================================================
+
+--------------------------------------------------------------------------------
+  v0.4
+--------------------------------------------------------------------------------
+
+New Features
+  - Expand All / Collapse All buttons above the crate list for quick management
+    when working with a large number of crates
+  - Patch Notes button in the page footer opens a modal displaying the full
+    version history; content is fetched live from PATCHNOTES.txt
+
+Improvements
+  - Shared bins panel now shows a clear "Shared bins" / "My bins" section header
+    to distinguish pre-configured bins from personally added ones
+  - Default shared bins (read-only) now show a "Read only" or "Write access"
+    badge so it is clear at a glance what level of access you have
+
+Bug Fixes
+  - Write key override input now appears correctly below the bin row rather than
+    being squeezed into the side of the card
+
+
+--------------------------------------------------------------------------------
+  v0.3
+--------------------------------------------------------------------------------
+
+New Features
+  - Collapsible crate cards — click the chevron on any crate to collapse it down
+    to a compact summary row showing item count, cost, expected value, and ROI
+  - JSONBin.io integration for shared crate data across multiple users
+      - Shared bins: pre-configure read-only bins that appear for all users
+        automatically with no setup required on their end
+      - Personal bins: add your own bins via the Bins panel using an access key
+        and bin ID from jsonbin.io
+      - Write key override: any user can supply their own write-access key for a
+        bin (including shared/read-only ones) stored locally in their browser
+      - Bin status indicator in the header shows connected / saving / error state
+      - Manual Save button appears in the header when connected to a writable bin
+      - Active bin data is loaded automatically on page open
+
+Security
+  - Switched authentication from X-Master-Key to X-Access-Key throughout,
+    following JSONBin best practice for access-scoped keys
+
+
+--------------------------------------------------------------------------------
+  v0.2
+--------------------------------------------------------------------------------
+
+New Features
+  - Coin conversion rate bar at the top of the page — enter a £-per-coin rate
+    and each crate's cost will show its real-world GBP equivalent alongside the
+    point value
+  - ROI calculations now use the converted GBP cost when a conversion rate is
+    set, giving a meaningful like-for-like comparison
+  - Import / Export — download your full crate setup as a JSON file to share
+    with others; importing offers the choice to replace existing crates or merge
+    alongside them
+  - Remove button added to each item row
+
+Visual
+  - Full visual redesign: purple gradient header, Inter typeface, Tabler Icons,
+    defined colour palette with proper shadows and border radii
+  - Item values are now labelled in GBP (£) throughout; crate costs remain in
+    points and are marked with a coin icon to make the distinction clear
+  - Expected value chip on each crate card highlighted in purple
+  - Table headers, buttons, and warning banners all restyled for clarity
+  - Version number displayed in the page header
+
+Bug Fixes
+  - Percentage validation warning/error now updates live as you type into the
+    chance field rather than only refreshing when adding or removing items
+
+
+--------------------------------------------------------------------------------
+  v0.1.0  —  Initial Release
+--------------------------------------------------------------------------------
+
+  - Add and remove loot crates with a custom name and point cost to open
+  - Add and remove items per crate, each with a drop chance (%) and GBP value
+  - Live expected value (EV) calculation per crate
+  - Percentage validation: warns when item chances sum to less than 100 %,
+    and flags an error when they exceed 100 %
+  - ROI comparison section with ranked metric cards and proportional bar chart
+  - All data persisted automatically in browser localStorage
+
+================================================================================
