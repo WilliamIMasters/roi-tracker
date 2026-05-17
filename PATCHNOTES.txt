@@ -6,6 +6,44 @@
   v0.5
 --------------------------------------------------------------------------------
 
+Bug Fixes
+  - Undo delete button in the toast was broken due to a quote-escaping issue in
+    the generated onclick handler; now works correctly
+  - Dark mode is now the default theme; light mode can be toggled via the
+    sun/moon button and the preference is saved across sessions
+  - Dark mode now correctly darkens the page header gradient
+  - Dragging a crate card no longer interferes with selecting text in inputs;
+    only the grip handle (⠿) on the left of the header initiates a drag
+  - JSONBin requests now time out after 10 seconds instead of hanging
+    indefinitely; the header moves to an error state rather than sticking on
+    "Saving…"
+  - Negative values are no longer accepted for crate cost or item value; item
+    chances are clamped between 0 and 100
+  - API errors now show plain-English messages ("Wrong access key", "Bin not
+    found", "Rate limit hit") instead of bare HTTP status codes
+  - Crates whose item chances exceed 100% now show a warning icon on their
+    results card and ROI bar to indicate the numbers may be inflated
+
+New Features
+  - Duplicate crate — button in the crate header clones the crate and all its
+    items, inserting it directly below the original
+  - Duplicate item — copy button on each item row duplicates it immediately below
+  - Undo last delete — deleting a crate or item shows a 5-second toast with an
+    Undo button to restore it
+  - Sort items by column — click the Chance, Value, or EV contrib. column header
+    to sort ascending or descending; arrows show the active sort direction
+  - Break-even chance — each results card shows the cumulative probability of
+    getting back at least the cost of opening the crate
+  - Dark mode — moon/sun toggle in the header switches themes; preference is
+    saved across sessions
+  - Drag to reorder crates — drag any crate card to rearrange the list
+  - Copy result to clipboard — button on each results card copies name, ROI and
+    EV as a formatted string for pasting into Discord
+  - Confirm before deleting a crate — Remove button requires a second click
+    within 3 seconds to prevent accidental deletions
+  - Last-saved timestamp — header status shows how long ago the bin was saved,
+    refreshing every 30 seconds
+
 Improvements
   - Version number is now defined in a single APP_VERSION constant in the
     script; both the header and footer read from it automatically so there is

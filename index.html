@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -566,6 +566,26 @@
   }
   .toast.show { opacity: 1; transform: translateY(0); }
   .toast.is-error { background: var(--red); }
+
+  /* ── Dark mode ── */
+  [data-theme="dark"] {
+    --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a;
+    --border: #2e3347; --text: #e8eaf0; --muted: #8b92a8;
+    --amber-lt: #2d2410; --green-lt: #0d2818; --red-lt: #2d1010; --accent-lt: #1e1235;
+  }
+  [data-theme="dark"] .items-table tbody tr:hover td { background: #1e2130; }
+  [data-theme="dark"] .conversion-bar { background: #1e1a0a; border-color: #3d3010; }
+  [data-theme="dark"] .site-header { background: linear-gradient(135deg, #2e0a6e 0%, #3b0f8c 60%, #5b21b6 100%); box-shadow: 0 2px 16px rgba(0,0,0,.5); }
+
+  /* ── Drag to reorder ── */
+  .card.drag-over { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-lt); }
+  .drag-handle { cursor: grab; color: var(--muted); padding: 4px 3px; display: flex; align-items: center; flex-shrink: 0; border-radius: 5px; transition: color .15s, background .15s; }
+  .drag-handle:hover { color: var(--text); background: var(--surface2); }
+  .drag-handle:active { cursor: grabbing; }
+
+  /* ── Copy result button ── */
+  .metric-card .copy-btn { position:absolute; bottom:10px; right:10px; background:none; border:1px solid var(--border); border-radius:5px; padding:3px 7px; cursor:pointer; font-size:11px; color:var(--muted); transition:color .15s,border-color .15s; }
+  .metric-card .copy-btn:hover { color:var(--accent); border-color:var(--accent); }
 </style>
 </head>
 <body>
@@ -582,6 +602,7 @@
       </div>
       <div class="header-actions">
         <button id="save-bin-btn" class="save-bin-btn" onclick="saveToActiveBin()"><i class="ti ti-cloud-upload"></i> Save</button>
+        <button class="hdr-btn" id="theme-btn" onclick="toggleDarkMode()" title="Toggle dark mode"><i class="ti ti-moon"></i></button>
         <button class="hdr-btn" onclick="openBinsModal()"><i class="ti ti-database"></i> Bins</button>
         <button class="hdr-btn" onclick="exportData()"><i class="ti ti-download"></i> Export</button>
         <button class="hdr-btn" onclick="document.getElementById('import-file').click()"><i class="ti ti-upload"></i> Import</button>
@@ -678,6 +699,12 @@ document.getElementById('version-footer').textContent = APP_VERSION;
 
 let data = {crates:[], conversionRate:0};
 const collapsed = new Set();
+let undoStack = null;
+let undoTimer = null;
+const itemSort = {};
+let dragSrcId = null;
+let lastSaved = null;
+const pendingDelete = new Set();
 
 /* ── Default shared bins (read-only access key embedded) ── */
 const DEFAULT_BINS = [
@@ -710,21 +737,47 @@ function getEffectiveKey(bin){ return keyOverrides[bin.id]||bin.accessKey; }
 function canWrite(bin){ return bin.isDefault ? !!keyOverrides[bin.id] : true; }
 
 /* ── JSONBin API ── */
+function friendlyError(status){
+  if(status===401||status===403) return 'Wrong access key';
+  if(status===404) return 'Bin not found';
+  if(status===429) return 'Rate limit hit — try again shortly';
+  return `Server error (HTTP ${status})`;
+}
 async function fetchBin(bin){
-  const res=await fetch(`https://api.jsonbin.io/v3/b/${bin.binId}/latest`,{
-    headers:{'X-Access-Key':getEffectiveKey(bin)}
-  });
-  if(!res.ok) throw new Error(`${res.status}`);
-  const j=await res.json();
-  return j.record;
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),10000);
+  try{
+    const res=await fetch(`https://api.jsonbin.io/v3/b/${bin.binId}/latest`,{
+      headers:{'X-Access-Key':getEffectiveKey(bin)},
+      signal:ctrl.signal
+    });
+    if(!res.ok) throw new Error(friendlyError(res.status));
+    const j=await res.json();
+    return j.record;
+  }catch(e){
+    if(e.name==='AbortError') throw new Error('Request timed out');
+    throw e;
+  }finally{
+    clearTimeout(timer);
+  }
 }
 async function pushBin(bin,payload){
-  const res=await fetch(`https://api.jsonbin.io/v3/b/${bin.binId}`,{
-    method:'PUT',
-    headers:{'X-Access-Key':getEffectiveKey(bin),'Content-Type':'application/json'},
-    body:JSON.stringify(payload)
-  });
-  if(!res.ok) throw new Error(`${res.status}`);
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),10000);
+  try{
+    const res=await fetch(`https://api.jsonbin.io/v3/b/${bin.binId}`,{
+      method:'PUT',
+      headers:{'X-Access-Key':getEffectiveKey(bin),'Content-Type':'application/json'},
+      body:JSON.stringify(payload),
+      signal:ctrl.signal
+    });
+    if(!res.ok) throw new Error(friendlyError(res.status));
+  }catch(e){
+    if(e.name==='AbortError') throw new Error('Request timed out');
+    throw e;
+  }finally{
+    clearTimeout(timer);
+  }
 }
 
 /* ── Bin status UI ── */
@@ -735,7 +788,7 @@ function setBinStatus(state,label='',writable=true){
   el.className='bin-status';
   if(state==='connected'){
     el.classList.add('visible','connected');
-    txt.textContent=`Connected to ${label}`;
+    txt.textContent=`Connected to ${label}${relativeTime(lastSaved)}`;
     if(writable) saveBtn.classList.add('visible');
     else saveBtn.classList.remove('visible');
   } else if(state==='saving'){
@@ -785,6 +838,7 @@ async function saveToActiveBin(){
   setBinStatus('saving');
   try{
     await pushBin(bin,data);
+    lastSaved=Date.now();
     setBinStatus('connected',bin.name,true);
     showToast(`Saved to "${bin.name}"`);
   }catch(e){
@@ -924,8 +978,34 @@ function addCrate(){
 }
 
 function deleteCrate(cid){
+  const index=data.crates.findIndex(c=>c.id===cid);
+  if(index===-1)return;
+  undoStack={type:'crate',data:JSON.parse(JSON.stringify(data.crates[index])),index};
+  clearTimeout(undoTimer);
+  undoTimer=setTimeout(()=>{undoStack=null;},5000);
   data.crates=data.crates.filter(c=>c.id!==cid);
+  pendingDelete.delete(cid);
   save();render();
+  showToast('Crate deleted',false,{label:'Undo',fn:'undoDelete'});
+}
+
+function duplicateCrate(cid){
+  const index=data.crates.findIndex(c=>c.id===cid);
+  if(index===-1)return;
+  const clone=JSON.parse(JSON.stringify(data.crates[index]));
+  clone.id=uid();
+  clone.name=clone.name+' (copy)';
+  clone.items=clone.items.map(it=>({...it,id:uid()}));
+  data.crates.splice(index+1,0,clone);
+  save();render();
+}
+
+function confirmDeleteCrate(cid){
+  if(pendingDelete.has(cid)){ deleteCrate(cid); return; }
+  pendingDelete.add(cid);
+  const btn=document.querySelector(`[data-cid="${cid}"] .del-confirm-btn`);
+  if(btn){ btn.innerHTML='Confirm?'; btn.style.borderColor='var(--red)'; btn.style.color='var(--red)'; }
+  setTimeout(()=>{ pendingDelete.delete(cid); const b=document.querySelector(`[data-cid="${cid}"] .del-confirm-btn`); if(b){ b.innerHTML='<i class="ti ti-trash" style="font-size:13px"></i> Remove'; b.style.borderColor=''; b.style.color=''; } }, 3000);
 }
 
 function addItem(cid){
@@ -936,8 +1016,40 @@ function addItem(cid){
 
 function deleteItem(cid,iid){
   const c=data.crates.find(c=>c.id===cid);
-  if(c)c.items=c.items.filter(i=>i.id!==iid);
+  if(!c)return;
+  const index=c.items.findIndex(i=>i.id===iid);
+  if(index===-1)return;
+  undoStack={type:'item',cid,data:JSON.parse(JSON.stringify(c.items[index])),index};
+  clearTimeout(undoTimer);
+  undoTimer=setTimeout(()=>{undoStack=null;},5000);
+  c.items=c.items.filter(i=>i.id!==iid);
   save();render();
+  showToast('Item deleted',false,{label:'Undo',fn:'undoDelete'});
+}
+
+function duplicateItem(cid,iid){
+  const c=data.crates.find(c=>c.id===cid);
+  if(!c)return;
+  const index=c.items.findIndex(i=>i.id===iid);
+  if(index===-1)return;
+  const clone=JSON.parse(JSON.stringify(c.items[index]));
+  clone.id=uid();
+  c.items.splice(index+1,0,clone);
+  save();render();
+}
+
+function undoDelete(){
+  if(!undoStack)return;
+  clearTimeout(undoTimer);
+  if(undoStack.type==='crate'){
+    data.crates.splice(undoStack.index,0,undoStack.data);
+  } else if(undoStack.type==='item'){
+    const c=data.crates.find(c=>c.id===undoStack.cid);
+    if(c) c.items.splice(undoStack.index,0,undoStack.data);
+  }
+  undoStack=null;
+  save();render();
+  showToast('Restored');
 }
 
 function setConversionRate(val){
@@ -969,7 +1081,7 @@ function updateAllCostDisplays(){
 function updateCrate(cid,field,val){
   const c=data.crates.find(c=>c.id===cid);
   if(!c)return;
-  c[field]=field==='cost'?parseFloat(val)||0:val;
+  c[field]=field==='cost'?Math.max(0,parseFloat(val)||0):val;
   save();renderResults();
   if(field==='cost') updateCostDisplay(cid);
 }
@@ -979,7 +1091,10 @@ function updateItem(cid,iid,field,val){
   if(!c)return;
   const it=c.items.find(i=>i.id===iid);
   if(!it)return;
-  it[field]=(field==='name')?val:(parseFloat(val)||0);
+  if(field==='name') it[field]=val;
+  else if(field==='chance') it[field]=Math.min(100,Math.max(0,parseFloat(val)||0));
+  else if(field==='value') it[field]=Math.max(0,parseFloat(val)||0);
+  else it[field]=parseFloat(val)||0;
   save();renderResults();updateWarning(cid);
 }
 
@@ -1003,6 +1118,25 @@ function calcEV(crate){
   return{ev,totalChance};
 }
 
+function sortItems(cid,col){
+  if(itemSort[cid]&&itemSort[cid].col===col){
+    itemSort[cid].dir=itemSort[cid].dir===1?-1:1;
+  } else {
+    itemSort[cid]={col,dir:1};
+  }
+  renderCrates();updateAllCostDisplays();
+}
+
+function sortArrow(cid,col){
+  if(!itemSort[cid]||itemSort[cid].col!==col) return '<span style="opacity:.3">&#x21D5;</span>';
+  return itemSort[cid].dir===1?'&#x2191;':'&#x2193;';
+}
+
+function onDragStart(e,cid){ dragSrcId=cid; e.dataTransfer.effectAllowed='move'; }
+function onDragOver(e,cid){ e.preventDefault(); document.querySelectorAll('.card').forEach(el=>el.classList.remove('drag-over')); const card=document.querySelector(`[data-cid="${cid}"]`); if(card&&cid!==dragSrcId) card.classList.add('drag-over'); }
+function onDrop(e,cid){ e.preventDefault(); document.querySelectorAll('.card').forEach(el=>el.classList.remove('drag-over')); if(!dragSrcId||dragSrcId===cid) return; const from=data.crates.findIndex(c=>c.id===dragSrcId); const to=data.crates.findIndex(c=>c.id===cid); if(from===-1||to===-1) return; const [moved]=data.crates.splice(from,1); data.crates.splice(to,0,moved); dragSrcId=null; save(); render(); }
+function onDragEnd(){ document.querySelectorAll('.card').forEach(el=>el.classList.remove('drag-over')); dragSrcId=null; }
+
 function renderCrates(){
   const el=document.getElementById('crates-container');
   const rate=data.conversionRate||0;
@@ -1018,13 +1152,19 @@ function renderCrates(){
         ?`<div class="warning"><i class="ti ti-info-circle"></i> Chances sum to ${totalChance.toFixed(1)}% — remaining ${(100-totalChance).toFixed(1)}% yields nothing</div>`
         :'';
 
-    const rows=c.items.map(it=>`
+    const sortState=itemSort[c.id];
+    const sortedItems=sortState?[...c.items].sort((a,b)=>{
+      const v=sortState.col==='ev'?(it=>((it.chance/100)*it.value)):sortState.col==='value'?(it=>it.value):(it=>it.chance);
+      return (v(a)-v(b))*sortState.dir;
+    }):c.items;
+
+    const rows=sortedItems.map(it=>`
       <tr>
         <td><input type="text" value="${esc(it.name)}" oninput="updateItem('${c.id}','${it.id}','name',this.value)"></td>
         <td><input type="number" min="0" max="100" step="0.01" value="${it.chance}" oninput="updateItem('${c.id}','${it.id}','chance',this.value)"></td>
         <td><div class="input-pfx"><span class="pfx">£</span><input type="number" min="0" step="0.01" value="${it.value}" oninput="updateItem('${c.id}','${it.id}','value',this.value)"></div></td>
         <td class="ev-contrib">£${((it.chance/100)*it.value).toFixed(2)}</td>
-        <td><button class="del-crate-btn" onclick="deleteItem('${c.id}','${it.id}')" aria-label="Remove item">Remove</button></td>
+        <td><button class="del-btn" onclick="duplicateItem('${c.id}','${it.id}')" title="Duplicate item" style="font-size:13px"><i class="ti ti-copy"></i></button><button class="del-crate-btn" onclick="deleteItem('${c.id}','${it.id}')" aria-label="Remove item">Remove</button></td>
       </tr>`).join('');
 
     const preview=`<div class="collapsed-preview">
@@ -1052,9 +1192,9 @@ function renderCrates(){
       <table class="items-table">
         <thead><tr>
           <th>Item name</th>
-          <th>Chance (%)</th>
-          <th>Value (£)</th>
-          <th>EV contrib. (£)</th>
+          <th style="cursor:pointer;user-select:none" onclick="sortItems('${c.id}','chance')">Chance (%) ${sortArrow(c.id,'chance')}</th>
+          <th style="cursor:pointer;user-select:none" onclick="sortItems('${c.id}','value')">Value (£) ${sortArrow(c.id,'value')}</th>
+          <th style="cursor:pointer;user-select:none" onclick="sortItems('${c.id}','ev')">EV contrib. (£) ${sortArrow(c.id,'ev')}</th>
           <th></th>
         </tr></thead>
         <tbody>${rows}</tbody>
@@ -1063,14 +1203,16 @@ function renderCrates(){
         <button class="add-btn" onclick="addItem('${c.id}')"><i class="ti ti-plus"></i> Add item</button>
       </div>`;
 
-    return `<div class="card" data-cid="${c.id}">
+    return `<div class="card" data-cid="${c.id}" ondragover="onDragOver(event,'${c.id}')" ondrop="onDrop(event,'${c.id}')" ondragend="onDragEnd()">
       <div class="crate-header${isCollapsed?'':' is-expanded'}">
+        <div class="drag-handle" draggable="true" ondragstart="onDragStart(event,'${c.id}')" title="Drag to reorder"><i class="ti ti-grip-vertical"></i></div>
         <button class="collapse-btn" onclick="toggleCollapse('${c.id}')" aria-label="${isCollapsed?'Expand':'Collapse'} crate">
           <i class="ti ti-chevron-${isCollapsed?'right':'down'}"></i>
         </button>
         <div class="crate-icon"><i class="ti ti-package"></i></div>
         <input class="crate-name-input" value="${esc(c.name)}" oninput="updateCrate('${c.id}','name',this.value)" placeholder="Crate name">
-        <button class="del-crate-btn" onclick="deleteCrate('${c.id}')"><i class="ti ti-trash" style="font-size:13px"></i> Remove</button>
+        <button class="del-crate-btn" onclick="duplicateCrate('${c.id}')" title="Duplicate crate"><i class="ti ti-copy" style="font-size:13px"></i></button>
+        <button class="del-crate-btn del-confirm-btn" onclick="confirmDeleteCrate('${c.id}')"><i class="ti ti-trash" style="font-size:13px"></i> Remove</button>
       </div>
       ${isCollapsed?preview:body}
     </div>`;
@@ -1090,7 +1232,8 @@ function renderResults(){
     const{ev,totalChance}=calcEV(c);
     const costGbp=rate>0?c.cost*rate:c.cost;
     const roi=(ev-costGbp)/costGbp*100;
-    return{c,ev,roi,totalChance,costGbp};
+    const breakEvenChance=c.items.reduce((a,item)=>a+(item.value>=costGbp?item.chance:0),0);
+    return{c,ev,roi,totalChance,costGbp,breakEvenChance};
   }).sort((a,b)=>b.roi-a.roi);
 
   const maxROI=Math.max(...results.map(r=>Math.abs(r.roi)),1);
@@ -1100,11 +1243,14 @@ function renderResults(){
       :i===1?`<span class="rank-badge rank-2">2nd</span>`
       :i===2?`<span class="rank-badge rank-3">3rd</span>`:'';
     const roiColor=r.roi>=0?'#16a34a':'#dc2626';
+    const warnIcon=r.totalChance>100?` <i class="ti ti-alert-triangle" style="color:var(--amber);font-size:18px" title="Item chances exceed 100% — results may be inflated"></i>`:'';
     return `<div class="metric-card">
       ${rankBadge}
       <div class="metric-label">${esc(r.c.name)}</div>
-      <div class="metric-value" style="color:${roiColor}">${r.roi>=0?'+':''}${r.roi.toFixed(1)}%</div>
+      <div class="metric-value" style="color:${roiColor}">${r.roi>=0?'+':''}${r.roi.toFixed(1)}%${warnIcon}</div>
       <div class="metric-sub">EV: £${r.ev.toFixed(2)} &nbsp;·&nbsp; Cost: ${rate>0?`£${r.costGbp.toFixed(2)}`:`<i class="ti ti-coin" style="color:#f59e0b;font-size:11px"></i> ${r.c.cost} pts`}</div>
+      <div class="metric-sub" style="margin-top:3px">Break-even: ${r.breakEvenChance.toFixed(1)}% chance</div>
+      <button class="copy-btn" onclick="copyResult('${esc(r.c.name)}','${r.roi>=0?'+':''}${r.roi.toFixed(1)}%','${r.ev.toFixed(2)}')" title="Copy"><i class="ti ti-copy"></i></button>
     </div>`;
   }).join('');
 
@@ -1112,10 +1258,11 @@ function renderResults(){
     const pct=Math.min(Math.abs(r.roi)/maxROI*100,100);
     const fillColor=r.roi>=0?'#16a34a':'#dc2626';
     const fillBg=r.roi>=0?'#dcfce7':'#fee2e2';
+    const warnIconBar=r.totalChance>100?` <i class="ti ti-alert-triangle" style="color:var(--amber);font-size:12px" title="Item chances exceed 100%"></i>`:'';
     return `<div class="roi-bar-wrap">
       <div class="roi-bar-label">
         <span>${esc(r.c.name)}</span>
-        <span style="color:${fillColor}">${r.roi>=0?'+':''}${r.roi.toFixed(2)}% ROI</span>
+        <span style="color:${fillColor}">${r.roi>=0?'+':''}${r.roi.toFixed(2)}% ROI${warnIconBar}</span>
       </div>
       <div class="roi-bar-track">
         <div class="roi-bar-fill" style="width:${pct.toFixed(1)}%;background:${fillBg};color:${fillColor}">
@@ -1133,13 +1280,26 @@ function render(){renderCrates();renderResults();updateAllCostDisplays();}
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-function showToast(msg, isError=false){
+function showToast(msg, isError=false, action=null){
   const t=document.getElementById('toast');
-  t.innerHTML=`<i class="ti ${isError?'ti-alert-circle':'ti-circle-check'}"></i>${msg}`;
+  const actionHtml=action?` <button onclick="${action.fn}()" style="margin-left:8px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:5px;padding:2px 8px;cursor:pointer;font-size:12px;font-family:inherit;color:#fff">${action.label}</button>`:'';
+  t.innerHTML=`<i class="ti ${isError?'ti-alert-circle':'ti-circle-check'}"></i>${msg}${actionHtml}`;
   t.className='toast'+(isError?' is-error':'')+' show';
+  t.style.pointerEvents=action?'auto':'none';
   clearTimeout(t._t);
-  t._t=setTimeout(()=>t.className='toast'+(isError?' is-error':''),2800);
+  t._t=setTimeout(()=>{t.className='toast'+(isError?' is-error':'');t.style.pointerEvents='none';},2800);
 }
+
+function toggleDarkMode(){
+  const dark = document.documentElement.dataset.theme === 'dark';
+  document.documentElement.dataset.theme = dark ? '' : 'dark';
+  document.getElementById('theme-btn').innerHTML = dark ? '<i class="ti ti-moon"></i>' : '<i class="ti ti-sun"></i>';
+  localStorage.setItem('loot_crate_theme', dark ? 'light' : 'dark');
+}
+
+function copyResult(name, roi, ev){ navigator.clipboard.writeText(`${name}: ROI ${roi}, EV £${ev}`).then(()=>showToast('Copied to clipboard')); }
+
+function relativeTime(d){ if(!d) return ''; const m=Math.floor((Date.now()-d)/60000); return m<1?' · Saved just now':` · Saved ${m}m ago`; }
 
 function exportData(){
   const json=JSON.stringify(data,null,2);
@@ -1203,6 +1363,13 @@ function handlePatchNotesOverlayClick(e){ if(e.target===e.currentTarget) closePa
 
 loadBinConfig();
 load();render();
+(()=>{
+  const t=localStorage.getItem('loot_crate_theme')||'dark';
+  document.documentElement.dataset.theme=t;
+  const b=document.getElementById('theme-btn');
+  if(b) b.innerHTML=t==='dark'?'<i class="ti ti-sun"></i>':'<i class="ti ti-moon"></i>';
+})();
+setInterval(()=>{ const bin=getActiveBin(); if(bin&&document.getElementById('bin-status').classList.contains('visible')){ const t=document.getElementById('bin-status-text'); if(t) t.textContent=`Connected to ${bin.name}${relativeTime(lastSaved)}`; }}, 30000);
 /* Auto-connect to active bin on page load */
 (async()=>{
   const bin=getActiveBin();
